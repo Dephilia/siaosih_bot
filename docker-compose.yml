@@ -1,0 +1,7 @@
+version: "3"
+services:
+  plurk_bot:
+    build: .
+    volumes:
+      - ./data:/app/data
+    image: siaosihbot:latest
