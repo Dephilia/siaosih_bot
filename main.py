@@ -147,7 +147,7 @@ class Bot:
                 if "不要笑" in d["content"]:
                     res = self.add_user(d["user_id"])
                     if res: loguru.logger.info("Stop user " + str(d["user_id"]))
-                elif "笑死" in d["content"]:
+                elif "好笑嗎" in d["content"]:
                     res = self.remove_user(d["user_id"])
                     if res: loguru.logger.info("Reset user " + str(d["user_id"]))
 
