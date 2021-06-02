@@ -86,6 +86,13 @@ class Bot:
         con.close()
         return result
 
+    def is_friend(self, id):
+        opt = {
+            'user_id': id
+        }
+        resp = self.plurk.callAPI("/APP/Profile/getPublicProfile", options=opt)
+        return resp["are_friends"]
+
     def gen_msg(self):
         wara_imgs = [
             "https://i.imgur.com/3G7rJ06.jpg",
@@ -133,6 +140,10 @@ class Bot:
                 loguru.logger.warning(json.dumps(d))
                 continue
             if d['type'] == 'new_plurk':
+                if not self.is_friend(d["user_id"]):
+                    # Not friend, jump
+                    continue
+
                 if "不要笑" in d["content"]:
                     res = self.add_user(d["user_id"])
                     if res: loguru.logger.info("Stop user " + str(d["user_id"]))
