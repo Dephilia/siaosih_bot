@@ -234,7 +234,7 @@ class Bot:
             loguru.logger.info("Refresh comet channel")
 
         schedule.every(5).seconds.do(add_all_friends)
-        schedule.every(20).minutes.do(refresh_channel)
+        schedule.every(10).minutes.do(refresh_channel)
         while self.main_flag:
             schedule.run_pending()
             time.sleep(1)
