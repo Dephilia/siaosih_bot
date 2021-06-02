@@ -103,10 +103,13 @@ class Bot:
             "https://images.plurk.com/1M3oSnXNOMVxnOose7Wh8v.jpg",
             "https://images.plurk.com/1NiFD84tWntjhd65rqpofb.png"
         ]
-        rand_num = random.randint(0, 10)
-        if rand_num == 0:
+        rand_num = random.randint(1, 100)
+
+        if rand_num <= 3:
+            return '草'
+        elif rand_num <= 10:
             return random.choice(wara_imgs) + ' \n笑死'
-        elif rand_num == 1:
+        elif rand_num <= 20:
             return '哭啊'
         else:
             return '笑死'
