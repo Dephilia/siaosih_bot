@@ -204,7 +204,7 @@ class Bot:
                     # Not friend, jump
                     continue
 
-                if "不要笑" in d["content"]:
+                if "不好笑" in d["content"]:
                     res = self.add_user(d["user_id"])
                     if res: loguru.logger.info("Stop user " + str(d["user_id"]))
                 elif "好笑嗎" in d["content"]:
