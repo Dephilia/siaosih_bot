@@ -4,10 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-plurk-oauth = {git = "https://github.com/clsung/plurk-oauth.git"}
 requests = "*"
 loguru = "*"
 schedule = "*"
+poaurk = "*"
 
 [dev-packages]
 

@@ -6,7 +6,7 @@ Nonsense plurk bot
 Distributed under terms of the MIT license.
 """
 
-from plurk_oauth import PlurkAPI
+from poaurk import PlurkAPI
 from multiprocessing import Process
 import typing
 import requests
@@ -27,7 +27,7 @@ class Bot:
         self.database = database
 
         self.plurk = PlurkAPI.fromfile(token_file)
-        user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
+        _, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
         self.comet_server_url = user_channel["comet_server"]
         loguru.logger.info("Start pulling from comet server: " + self.comet_server_url)
 
@@ -90,7 +90,7 @@ class Bot:
         opt = {
             'user_id': id
         }
-        resp = self.plurk.callAPI("/APP/Profile/getPublicProfile", options=opt)
+        _, resp = self.plurk.callAPI("/APP/Profile/getPublicProfile", options=opt)
         return resp["are_friends"]
 
     def gen_msg(self):
@@ -220,7 +220,7 @@ class Bot:
                         'content': self.gen_msg()
                     }
                     loguru.logger.info("Response to " + str(opt["plurk_id"]))
-                    resp = self.plurk.callAPI("/APP/Responses/responseAdd", options=opt)
+                    _, resp = self.plurk.callAPI("/APP/Responses/responseAdd", options=opt)
 
 
     def routine_main(self):
@@ -228,7 +228,7 @@ class Bot:
             self.plurk.callAPI("/APP/Alerts/addAllAsFriends")
 
         def refresh_channel():
-            user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
+            _, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
             self.comet_server_url = user_channel["comet_server"]
             self.offset = 0
             loguru.logger.info("Refresh comet channel")
