@@ -192,7 +192,8 @@ class Bot:
 
             if "new_offset" in json_content:
                 offset = json_content["new_offset"]
-
+                if offset<0:
+                    loguru.logger.error(f"Offset Error: {offset}")
 
     def comet_callBack(self, data):
         for d in data:
