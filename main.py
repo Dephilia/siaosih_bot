@@ -26,9 +26,11 @@ class Bot:
         self.offset = 0
         self.database = database
 
+
         self.plurk = PlurkAPI.fromfile(token_file)
         _, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
         self.comet_server_url = user_channel["comet_server"]
+        self.channel_name = user_channel["channel_name"]
         loguru.logger.info("Start pulling from comet server: " + self.comet_server_url)
 
         con = sqlite3.connect(self.database)
@@ -172,6 +174,13 @@ class Bot:
             return '笑死'
 
 
+    def refresh_channel(self):
+        _, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
+        self.comet_server_url = user_channel["comet_server"]
+        self.offset = 0
+        loguru.logger.info("Refresh comet channel")
+
+
     def comet_main(self):
         while self.main_flag:
             q = {'offset':  self.offset}
@@ -194,6 +203,7 @@ class Bot:
                 offset = json_content["new_offset"]
                 if offset<0:
                     loguru.logger.error(f"Offset Error: {offset}")
+                    self.refresh_channel()
 
     def comet_callBack(self, data):
         for d in data:
@@ -228,14 +238,16 @@ class Bot:
         def add_all_friends():
             self.plurk.callAPI("/APP/Alerts/addAllAsFriends")
 
-        def refresh_channel():
-            _, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
-            self.comet_server_url = user_channel["comet_server"]
-            self.offset = 0
-            loguru.logger.info("Refresh comet channel")
+        def knock_comet():
+            knock_comet_url = "https://www.plurk.com/_comet/generic"
+            p = {
+                'channel': self.channel_name
+            }
+            r = requests.get(knock_comet_url, params=p)
 
         schedule.every(5).seconds.do(add_all_friends)
-        schedule.every(10).minutes.do(refresh_channel)
+        # schedule.every(10).minutes.do(refresh_channel)
+        schedule.every(1).minutes.do(knock_comet)
         while self.main_flag:
             schedule.run_pending()
             time.sleep(1)
