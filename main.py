@@ -185,12 +185,22 @@ class Bot:
         while self.main_flag:
             q = {'offset':  self.offset}
 
-            resp = requests.get(self.comet_server_url, params=q)
 
-            if resp.status_code != 200:
-                loguru.logger.error('RESP: status code is not 200')
+            try:
+                resp = requests.get(self.comet_server_url, params=q)
+                resp.raise_for_status()
+            except requests.exceptions.HTTPError as errh:
+                loguru.logger.error(f"Http Error: {errh}")
                 continue
-            # loguru.logger.success('RESP: success')
+            except requests.exceptions.ConnectionError as errc:
+                loguru.logger.error(f"Error Connecting: {errc}")
+                continue
+            except requests.exceptions.Timeout as errt:
+                loguru.logger.error(f"Timeout Error: {errt}")
+                continue
+            except requests.exceptions.RequestException as err:
+                loguru.logger.error(f"Request Other Error: {err}")
+                continue
 
             comet_content = resp.text
 
@@ -243,7 +253,22 @@ class Bot:
             p = {
                 'channel': self.channel_name
             }
-            r = requests.get(knock_comet_url, params=p)
+            try:
+                resp = requests.get(knock_comet_url, params=p)
+                resp.raise_for_status()
+            except requests.exceptions.HTTPError as errh:
+                loguru.logger.error(f"Http Error: {errh}")
+                continue
+            except requests.exceptions.ConnectionError as errc:
+                loguru.logger.error(f"Error Connecting: {errc}")
+                continue
+            except requests.exceptions.Timeout as errt:
+                loguru.logger.error(f"Timeout Error: {errt}")
+                continue
+            except requests.exceptions.RequestException as err:
+                loguru.logger.error(f"Request Other Error: {err}")
+                continue
+
 
         schedule.every(5).seconds.do(add_all_friends)
         # schedule.every(10).minutes.do(refresh_channel)
