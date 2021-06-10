@@ -185,7 +185,6 @@ class Bot:
         while self.main_flag:
             q = {'offset':  self.offset}
 
-
             try:
                 resp = requests.get(self.comet_server_url, params=q)
                 resp.raise_for_status()
@@ -258,16 +257,16 @@ class Bot:
                 resp.raise_for_status()
             except requests.exceptions.HTTPError as errh:
                 loguru.logger.error(f"Http Error: {errh}")
-                continue
+                return
             except requests.exceptions.ConnectionError as errc:
                 loguru.logger.error(f"Error Connecting: {errc}")
-                continue
+                return
             except requests.exceptions.Timeout as errt:
                 loguru.logger.error(f"Timeout Error: {errt}")
-                continue
+                return
             except requests.exceptions.RequestException as err:
                 loguru.logger.error(f"Request Other Error: {err}")
-                continue
+                return
 
 
         schedule.every(5).seconds.do(add_all_friends)
