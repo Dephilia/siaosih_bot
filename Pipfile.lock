@@ -57,11 +57,10 @@
         },
         "poaurk": {
             "hashes": [
-                "sha256:24f124d89bf5c5b3b7c2b97861bc05ac1aeae3993456721366604d765d1f7c3b",
-                "sha256:b8aefef2148c971712369f79efd7f16986379f55eb2036c18204d2c16d42e8c2"
+                "sha256:74950bb9be7216e96226b6be43348a6ea1a7bd619499dc46d23b9a1f796373f5"
             ],
             "index": "pypi",
-            "version": "==0.1.2"
+            "version": "==0.1.3"
         },
         "requests": {
             "hashes": [

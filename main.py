@@ -37,6 +37,7 @@ class Bot:
             loguru.logger.info("Start pulling from comet server: " + self.comet_server_url)
         else:
             loguru.logger.error("Get comet channel failed")
+            return
 
         con = sqlite3.connect(self.database)
         cur = con.cursor()
@@ -98,8 +99,12 @@ class Bot:
             'user_id': id
         }
         status, resp = self.plurk.callAPI("/APP/Profile/getPublicProfile", options=opt)
+        if not status:
+            loguru.logger.error(resp)
+            return None
 
         return resp["are_friends"]
+
 
     def gen_msg(self):
         wara_imgs = [
@@ -249,7 +254,7 @@ class Bot:
                         'content': self.gen_msg()
                     }
                     loguru.logger.info("Response to " + str(opt["plurk_id"]))
-                    _, resp = self.plurk.callAPI("/APP/Responses/responseAdd", options=opt)
+                    self.plurk.callAPI("/APP/Responses/responseAdd", options=opt)
 
 
     def routine_main(self):
