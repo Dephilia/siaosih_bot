@@ -32,9 +32,10 @@ class Bot:
         status, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
         if status:
             self.comet_server_url = user_channel["comet_server"]
+            self.comet_server_url = self.comet_server_url.split('?')[0].split('#')[0]
             self.channel_name = user_channel["channel_name"]
             self.offset = 0
-            loguru.logger.info("Start pulling from comet server: " + self.comet_server_url)
+            loguru.logger.info(f"Start pulling from comet server: {self.comet_server_url}, channel: {self.channel_name}")
         else:
             loguru.logger.error("Get comet channel failed")
             return
@@ -186,18 +187,17 @@ class Bot:
 
 
     def refresh_channel(self):
-        status, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
-        if status:
-            self.comet_server_url = user_channel["comet_server"]
-            self.offset = 0
-            loguru.logger.info("Refresh comet channel")
-        else:
-            loguru.logger.error("Refresh comet channel failed")
+        self.plurk.callAPI("/APP/Realtime/getUserChannel")
+        self.offset = 0
+        loguru.logger.info("Refresh comet channel")
 
 
     def comet_main(self):
         while self.main_flag:
-            q = {'offset':  self.offset}
+            q = {
+                'channel': self.channel_name,
+                'offset':  self.offset
+            }
 
             try:
                 resp = requests.get(self.comet_server_url, params=q)
