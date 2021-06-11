@@ -28,10 +28,15 @@ class Bot:
 
 
         self.plurk = PlurkAPI.fromfile(token_file)
-        _, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
-        self.comet_server_url = user_channel["comet_server"]
-        self.channel_name = user_channel["channel_name"]
-        loguru.logger.info("Start pulling from comet server: " + self.comet_server_url)
+
+        status, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
+        if status:
+            self.comet_server_url = user_channel["comet_server"]
+            self.channel_name = user_channel["channel_name"]
+            self.offset = 0
+            loguru.logger.info("Start pulling from comet server: " + self.comet_server_url)
+        else:
+            loguru.logger.error("Get comet channel failed")
 
         con = sqlite3.connect(self.database)
         cur = con.cursor()
@@ -92,7 +97,8 @@ class Bot:
         opt = {
             'user_id': id
         }
-        _, resp = self.plurk.callAPI("/APP/Profile/getPublicProfile", options=opt)
+        status, resp = self.plurk.callAPI("/APP/Profile/getPublicProfile", options=opt)
+
         return resp["are_friends"]
 
     def gen_msg(self):
@@ -175,10 +181,13 @@ class Bot:
 
 
     def refresh_channel(self):
-        _, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
-        self.comet_server_url = user_channel["comet_server"]
-        self.offset = 0
-        loguru.logger.info("Refresh comet channel")
+        status, user_channel = self.plurk.callAPI("/APP/Realtime/getUserChannel")
+        if status:
+            self.comet_server_url = user_channel["comet_server"]
+            self.offset = 0
+            loguru.logger.info("Refresh comet channel")
+        else:
+            loguru.logger.error("Refresh comet channel failed")
 
 
     def comet_main(self):
