@@ -304,7 +304,8 @@ class Bot:
 
 if __name__=="__main__":
     loguru.logger.add(
-        f'data/{datetime.date.today():%Y%m%d}.log',
+        # f'data/{datetime.date.today():%Y%m%d}.log',
+        'data/{time}.log',
         rotation='1 day',
         retention='7 days',
         level='DEBUG')
