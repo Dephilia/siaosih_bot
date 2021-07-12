@@ -215,6 +215,7 @@ class Bot:
                 loguru.logger.error(f"Request Other Error: {err}")
                 continue
 
+            loguru.logger.debug(f"Request url: {resp.url}")
             comet_content = resp.text
 
             m = re.search(r'CometChannel.scriptCallback\((.*)\);', comet_content)
@@ -223,8 +224,8 @@ class Bot:
                 self.comet_callBack(json_content["data"])
 
             if "new_offset" in json_content:
-                offset = json_content["new_offset"]
-                if offset<0:
+                self.offset = json_content["new_offset"]
+                if self.offset<0:
                     loguru.logger.error(f"Offset Error: {offset}")
                     self.refresh_channel()
 
