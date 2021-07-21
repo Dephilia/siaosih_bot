@@ -7,7 +7,7 @@ Distributed under terms of the MIT license.
 """
 
 from poaurk import PlurkAPI
-from multiprocessing import Process
+from multiprocessing import Process, Value
 import typing
 import requests
 import json
@@ -106,6 +106,26 @@ class Bot:
 
         return resp["are_friends"]
 
+    def base36encode(self, number, alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
+        """Converts an integer to a base36 string."""
+        if not isinstance(number, int):
+            raise TypeError('number must be an integer')
+
+        base36 = ''
+        sign = ''
+
+        if number < 0:
+            sign = '-'
+            number = -number
+
+        if 0 <= number < len(alphabet):
+            return sign + alphabet[number]
+
+        while number != 0:
+            number, i = divmod(number, len(alphabet))
+            base36 = alphabet[i] + base36
+
+        return sign + base36
 
     def gen_msg(self):
         wara_imgs = [
@@ -192,7 +212,7 @@ class Bot:
         loguru.logger.info("Refresh comet channel")
 
 
-    def comet_main(self):
+    def comet_main(self, watchdog):
         while self.main_flag:
             q = {
                 'channel': self.channel_name,
@@ -200,7 +220,7 @@ class Bot:
             }
 
             try:
-                resp = requests.get(self.comet_server_url, params=q)
+                resp = requests.get(self.comet_server_url, params=q, timeout=60)
                 resp.raise_for_status()
             except requests.exceptions.HTTPError as errh:
                 loguru.logger.error(f"Http Error: {errh}")
@@ -221,13 +241,18 @@ class Bot:
             m = re.search(r'CometChannel.scriptCallback\((.*)\);', comet_content)
             json_content = json.loads(m.group(1))
             if "data" in json_content:
-                self.comet_callBack(json_content["data"])
+                try:
+                    self.comet_callBack(json_content["data"])
+                except Exception as err:
+                    loguru.logger.error(f"Callback Error: {err}")
 
             if "new_offset" in json_content:
                 self.offset = json_content["new_offset"]
                 if self.offset<0:
                     loguru.logger.error(f"Offset Error: {offset}")
                     self.refresh_channel()
+
+            watchdog.value = 1
 
     def comet_callBack(self, data):
         for d in data:
@@ -254,11 +279,12 @@ class Bot:
                         'qualifier': ':',
                         'content': self.gen_msg()
                     }
-                    loguru.logger.info("Response to " + str(opt["plurk_id"]))
+                    plurk_id_base36 = self.base36encode(opt['plurk_id'])
+                    loguru.logger.info(f"Response to https://www.plurk.com/p/{plurk_id_base36}")
                     self.plurk.callAPI("/APP/Responses/responseAdd", options=opt)
 
 
-    def routine_main(self):
+    def routine_main(self, watchdog):
         def add_all_friends():
             self.plurk.callAPI("/APP/Alerts/addAllAsFriends")
 
@@ -268,7 +294,7 @@ class Bot:
                 'channel': self.channel_name
             }
             try:
-                resp = requests.get(knock_comet_url, params=p)
+                resp = requests.get(knock_comet_url, params=p, timeout=60)
                 resp.raise_for_status()
             except requests.exceptions.HTTPError as errh:
                 loguru.logger.error(f"Http Error: {errh}")
@@ -283,18 +309,27 @@ class Bot:
                 loguru.logger.error(f"Request Other Error: {err}")
                 return
 
+            loguru.logger.debug(f"Request url: {resp.url}")
+
+        def watch_dog():
+            if not watchdog.value:
+                loguru.logger.error("No response")
+                return
+            loguru.logger.debug("Running...")
+            watchdog.value = 0
 
         schedule.every(5).seconds.do(add_all_friends)
-        # schedule.every(10).minutes.do(refresh_channel)
         schedule.every(1).minutes.do(knock_comet)
+        schedule.every(10).minutes.do(watch_dog)
         while self.main_flag:
             schedule.run_pending()
             time.sleep(1)
 
     def main(self):
+        watchdog_flag = Value('i', 1)
         try:
-            comet_proc = Process(target=self.comet_main, daemon=True)
-            routine_proc = Process(target=self.routine_main, daemon=True)
+            comet_proc = Process(target=self.comet_main, args=(watchdog_flag,), daemon=True)
+            routine_proc = Process(target=self.routine_main, args=(watchdog_flag,), daemon=True)
             comet_proc.start()
             routine_proc.start()
             while True: time.sleep(100)
@@ -309,6 +344,7 @@ if __name__=="__main__":
         'data/{time}.log',
         rotation='1 day',
         retention='7 days',
+        # level='INFO')
         level='DEBUG')
     bot = Bot("token.txt", "data/users.db")
     bot.main()
