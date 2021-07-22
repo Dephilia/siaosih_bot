@@ -253,7 +253,7 @@ class Bot:
             try:
                 if "new_offset" in json_content:
                     self.offset = json_content["new_offset"]
-                    loguru.logger.debug(f"Update Offset: {self.offset}")
+                    # loguru.logger.debug(f"Update Offset: {self.offset}")
                     if self.offset<0:
                         loguru.logger.error(f"Offset Error: {offset}")
                         self.refresh_channel()
@@ -316,6 +316,9 @@ class Bot:
             except requests.exceptions.RequestException as err:
                 loguru.logger.error(f"Request Other Error: {err}")
                 return
+            except Exception as err:
+                loguru.logger.error(f"Other Error: {err}")
+                return
 
             loguru.logger.debug(f"Request url: {resp.url}")
 
@@ -330,7 +333,10 @@ class Bot:
         schedule.every(1).minutes.do(knock_comet)
         schedule.every(10).minutes.do(watch_dog)
         while self.main_flag:
-            schedule.run_pending()
+            try:
+                schedule.run_pending()
+            except Exception as err:
+                loguru.logger.error(f"Schedule Task Error: {err}")
             time.sleep(1)
 
     def main(self):
