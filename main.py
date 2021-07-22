@@ -239,18 +239,26 @@ class Bot:
             comet_content = resp.text
 
             m = re.search(r'CometChannel.scriptCallback\((.*)\);', comet_content)
-            json_content = json.loads(m.group(1))
-            if "data" in json_content:
-                try:
-                    self.comet_callBack(json_content["data"])
-                except Exception as err:
-                    loguru.logger.error(f"Callback Error: {err}")
+            try:
+                json_content = json.loads(m.group(1))
+            except Exception as err:
+                loguru.logger.error(f"Json Error: {err}")
 
-            if "new_offset" in json_content:
-                self.offset = json_content["new_offset"]
-                if self.offset<0:
-                    loguru.logger.error(f"Offset Error: {offset}")
-                    self.refresh_channel()
+            try:
+                if "data" in json_content:
+                    self.comet_callBack(json_content["data"])
+            except Exception as err:
+                loguru.logger.error(f"Callback Error: {err}")
+
+            try:
+                if "new_offset" in json_content:
+                    self.offset = json_content["new_offset"]
+                    loguru.logger.debug(f"Update Offset: {self.offset}")
+                    if self.offset<0:
+                        loguru.logger.error(f"Offset Error: {offset}")
+                        self.refresh_channel()
+            except Exception as err:
+                loguru.logger.error(f"Offset Error: {err}")
 
             watchdog.value = 1
 
@@ -332,7 +340,9 @@ class Bot:
             routine_proc = Process(target=self.routine_main, args=(watchdog_flag,), daemon=True)
             comet_proc.start()
             routine_proc.start()
-            while True: time.sleep(100)
+            while True:
+                time.sleep(100)
+                loguru.logger.debug(f"Running... Comet: {comet_proc.is_alive()}, Routine: {routine_proc.is_alive()}")
         except (KeyboardInterrupt, SystemExit):
             comet_proc.terminate()
             routine_proc.terminate()
