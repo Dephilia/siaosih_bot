@@ -360,6 +360,7 @@ if __name__=="__main__":
         'data/{time}.log',
         rotation='1 day',
         retention='7 days',
+        enqueue=True,
         # level='INFO')
         level='DEBUG')
     bot = Bot("token.txt", "data/users.db")
