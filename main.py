@@ -3,7 +3,7 @@
 """
 Nonsense plurk bot
 
-Distributed under terms of the MIT license.
+Distributed under terms of the WTFPL license.
 """
 
 from poaurk import PlurkAPI
