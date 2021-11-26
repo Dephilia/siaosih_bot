@@ -17,15 +17,12 @@ import datetime
 import time
 import random
 import schedule
-import sqlite3
 
 class Bot:
-    def __init__(self, token_file, database):
+    def __init__(self, token_file):
 
         self.main_flag = True
         self.offset = 0
-        self.database = database
-
 
         self.plurk = PlurkAPI.fromfile(token_file)
 
@@ -39,61 +36,6 @@ class Bot:
         else:
             loguru.logger.error("Get comet channel failed")
             return
-
-        con = sqlite3.connect(self.database)
-        cur = con.cursor()
-        cur.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='users' ''')
-        #if the count is 1, then table exists
-        if cur.fetchone()[0]==1: 
-            loguru.logger.info("Table exists.")
-        else:
-            #create table
-            cur.execute('''CREATE TABLE IF NOT EXISTS users
-                         (id real)''')
-            loguru.logger.info("Table not exists, create one.")
-
-        con.commit()
-        con.close()
-
-    def add_user(self, id):
-        if self.if_user(id):
-            # If already in
-            return False
-        con = sqlite3.connect(self.database)
-        cur = con.cursor()
-
-        insert_with_param = """INSERT INTO users 
-                          (id)
-                          VALUES (?);"""
-
-        data_tuple = (id, )
-        cur.execute(insert_with_param, data_tuple)
-
-        con.commit()
-        con.close()
-        return True
-
-    def remove_user(self, id):
-        if not self.if_user(id):
-            # If not in
-            return False
-        con = sqlite3.connect(self.database)
-        cur = con.cursor()
-        cur.execute("DELETE FROM users WHERE id=?;", (id,))
-
-        con.commit()
-        con.close()
-        return True
-
-    def if_user(self, id):
-        result = False
-        con = sqlite3.connect(self.database)
-        cur = con.cursor()
-        cur.execute("SELECT count(id) FROM users WHERE id=?;", (id,))
-        if cur.fetchone()[0] >= 1: 
-            result = True
-        con.close()
-        return result
 
     def is_friend(self, id):
         opt = {
@@ -205,12 +147,10 @@ class Bot:
         else:
             return '笑死'
 
-
     def refresh_channel(self):
         self.plurk.callAPI("/APP/Realtime/getUserChannel")
         self.offset = 0
         loguru.logger.info("Refresh comet channel")
-
 
     def comet_main(self, watchdog):
         while self.main_flag:
@@ -268,20 +208,7 @@ class Bot:
                 loguru.logger.warning(json.dumps(d))
                 continue
             if d['type'] == 'new_plurk':
-                if not self.is_friend(d["user_id"]):
-                    # Not friend, jump
-                    continue
-
-                if "不好笑" in d["content"]:
-                    res = self.add_user(d["user_id"])
-                    if res: loguru.logger.info("Stop user " + str(d["user_id"]))
-                elif "好笑嗎" in d["content"]:
-                    res = self.remove_user(d["user_id"])
-                    if res: loguru.logger.info("Reset user " + str(d["user_id"]))
-
-                if self.if_user(d["user_id"]):
-                    continue
-                else:
+                if self.is_friend(d["user_id"]):
                     opt = {
                         'plurk_id': d['plurk_id'],
                         'qualifier': ':',
@@ -290,7 +217,6 @@ class Bot:
                     plurk_id_base36 = self.base36encode(opt['plurk_id'])
                     loguru.logger.info(f"Response to https://www.plurk.com/p/{plurk_id_base36}")
                     self.plurk.callAPI("/APP/Responses/responseAdd", options=opt)
-
 
     def routine_main(self, watchdog):
         def add_all_friends():
@@ -363,5 +289,5 @@ if __name__=="__main__":
         enqueue=True,
         # level='INFO')
         level='DEBUG')
-    bot = Bot("token.txt", "data/users.db")
+    bot = Bot("token.txt")
     bot.main()
