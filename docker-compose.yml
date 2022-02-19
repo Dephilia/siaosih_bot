@@ -3,7 +3,6 @@ services:
   plurk_bot:
     environment:
       TZ: "Asia/Taipei"
-    build: .
     volumes:
-      - ./data:/app/data
-    image: siaosihbot:latest
+      - ./token.txt:/app/token.txt
+    image: ghcr.io/dephilia/siaosih_bot:latest

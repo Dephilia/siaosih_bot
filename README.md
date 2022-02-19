@@ -12,7 +12,7 @@ Go ask plurk a bot token, an account.
 Install **docker**.
 
 ```
-docker-compose up -d --build
+docker-compose up -d
 ```
 
 If no, install **pipenv**.
@@ -20,7 +20,6 @@ If no, install **pipenv**.
 ```
 pipenv run python main.py
 ```
-
 
 Nothing more.
 
