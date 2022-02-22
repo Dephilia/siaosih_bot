@@ -7,3 +7,4 @@ services:
     volumes:
       - ./data:/app/data
     image: siaosihbot:latest
+    restart: always
