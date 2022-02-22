@@ -4,5 +4,6 @@ services:
     environment:
       TZ: "Asia/Taipei"
     volumes:
+      - ./data:/app/data
       - ./token.txt:/app/token.txt
     image: ghcr.io/dephilia/siaosih_bot:latest
