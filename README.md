@@ -7,21 +7,19 @@ siaosih, haha
 
 Go ask plurk a bot token, an account.
 
-`cp token.txt.example token.txt` and make sure your `token.txt` has well modified.
+`cp token.txt.example token.txt` and make sure your `token.txt` has been well modified.
 
-Install **docker**.
+Install **docker** & **docker-compose**.
 
 ```
 docker-compose up -d
 ```
 
-If no, install **pipenv**.
+Or you can use python with pipenv directly.
 
 ```
 pipenv run python main.py
 ```
-
-Nothing more.
 
 ## License
 
