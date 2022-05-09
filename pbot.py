@@ -237,7 +237,7 @@ class Bot:
             loguru.logger.debug(f"Request url: {resp.url}")
 
         def recall_comet():
-            # Holp this can solve the main problem from calling comet to a long time
+            # Hope this can solve the main problem from calling comet to a long time
             self.init_comet()
 
         schedule.every(1).minutes.do(add_all_friends)
