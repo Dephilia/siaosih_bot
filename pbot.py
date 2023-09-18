@@ -128,7 +128,13 @@ class Bot:
         return sign + base36
 
     def comet_main(self):
+        error = False
+        retry = 0
         while 1:
+            if retry > 100:
+                self.init_comet()
+                retry = 0
+
             q = {
                 'channel': self.channel_name,
                 'offset':  self.offset
@@ -139,16 +145,24 @@ class Bot:
                 resp.raise_for_status()
             except requests.exceptions.HTTPError as errh:
                 loguru.logger.error(f"Http Error: {errh}")
-                continue
+                error = True
             except requests.exceptions.ConnectionError as errc:
                 loguru.logger.error(f"Error Connecting: {errc}")
-                continue
+                error = True
             except requests.exceptions.Timeout as errt:
                 loguru.logger.error(f"Timeout Error: {errt}")
-                continue
+                error = True
             except requests.exceptions.RequestException as err:
                 loguru.logger.error(f"Request Other Error: {err}")
+                error = True
+
+            if error:
+                time.sleep(5)
+                retry += 1
+                error = False
                 continue
+
+            retry = 0
 
             loguru.logger.debug(f"Request url: {resp.url}")
             comet_content = resp.text
@@ -170,7 +184,7 @@ class Bot:
                     self.offset = json_content["new_offset"]
                     # loguru.logger.debug(f"Update Offset: {self.offset}")
                     if self.offset<0:
-                        loguru.logger.error(f"Offset Error: {offset}")
+                        loguru.logger.error(f"Offset Error: {self.offset}")
                         self.init_comet()
             except Exception as err:
                 loguru.logger.error(f"Offset Error: {err}")
