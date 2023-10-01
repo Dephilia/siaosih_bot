@@ -191,7 +191,7 @@ class Bot:
                 if "new_offset" in json_content:
                     if self.offset == json_content["new_offset"]:
                         offset_duplicate += 1
-                    else
+                    else:
                         offset_duplicate = 0
                     self.offset = json_content["new_offset"]
                     # loguru.logger.debug(f"Update Offset: {self.offset}")
