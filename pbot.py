@@ -16,6 +16,9 @@ import time
 import schedule
 import sqlite3
 
+COMET_RETRY = 100
+COMET_MAX_TRY = 10
+
 class Bot:
     def __init__(self, token_file, database, msg_func):
 
@@ -130,10 +133,15 @@ class Bot:
     def comet_main(self):
         error = False
         retry = 0
+        offset_duplicate = 0
         while 1:
-            if retry > 100:
+            if retry > COMET_RETRY:
                 self.init_comet()
                 retry = 0
+
+            if offset_duplicate > COMET_MAX_TRY:
+                self.init_comet()
+                offset_duplicate = 0
 
             q = {
                 'channel': self.channel_name,
@@ -181,6 +189,10 @@ class Bot:
 
             try:
                 if "new_offset" in json_content:
+                    if self.offset == json_content["new_offset"]:
+                        offset_duplicate += 1
+                    else
+                        offset_duplicate = 0
                     self.offset = json_content["new_offset"]
                     # loguru.logger.debug(f"Update Offset: {self.offset}")
                     if self.offset<0:
@@ -250,13 +262,8 @@ class Bot:
 
             loguru.logger.debug(f"Request url: {resp.url}")
 
-        def recall_comet():
-            # Hope this can solve the main problem from calling comet to a long time
-            self.init_comet()
-
         schedule.every(1).minutes.do(add_all_friends)
         schedule.every(1).minutes.do(knock_comet)
-        schedule.every().day.do(recall_comet)
 
         while 1:
             try:
@@ -268,9 +275,9 @@ class Bot:
             time.sleep(30)
 
     def main(self):
+        comet_proc = Process(target=self.comet_main, daemon=True)
+        routine_proc = Process(target=self.routine_main, daemon=True)
         try:
-            comet_proc = Process(target=self.comet_main, daemon=True)
-            routine_proc = Process(target=self.routine_main, daemon=True)
             comet_proc.start()
             routine_proc.start()
             while 1:
